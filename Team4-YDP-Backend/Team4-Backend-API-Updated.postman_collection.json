@@ -1,0 +1,326 @@
+{
+	"info": {
+		"_postman_id": "team4-backend-api-v2",
+		"name": "Team4 Backend API + AI Search",
+		"description": "API Collection สำหรับ Team4 YDP Backend - Authentication, AI Search และ Search History",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"demouser\",\n  \"email\": \"demo@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						},
+						"description": "ลงทะเบียนผู้ใช้ใหม่"
+					}
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"auth_token\", jsonData.token);",
+									"    console.log(\"Token saved:\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"demo@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						},
+						"description": "เข้าสู่ระบบและรับ JWT token"
+					}
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/profile",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "profile"]
+						},
+						"description": "ดูข้อมูล Profile ของผู้ใช้"
+					}
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "logout"]
+						},
+						"description": "ออกจากระบบ"
+					}
+				}
+			]
+		},
+		{
+			"name": "AI Search",
+			"item": [
+				{
+					"name": "Search - คอนโดใกล้ BTS",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/search?q=หาคอนโดใกล้ BTS ราคาไม่เกิน 3 ล้าน",
+							"host": ["{{base_url}}"],
+							"path": ["api", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "หาคอนโดใกล้ BTS ราคาไม่เกิน 3 ล้าน"
+								}
+							]
+						},
+						"description": "ค้นหาคอนโดด้วย AI"
+					}
+				},
+				{
+					"name": "Search - บ้านเดี่ยว",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/search?q=บ้านเดี่ยว 2 ชั้น มีสระว่ายน้ำ",
+							"host": ["{{base_url}}"],
+							"path": ["api", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "บ้านเดี่ยว 2 ชั้น มีสระว่ายน้ำ"
+								}
+							]
+						},
+						"description": "ค้นหาบ้านเดี่ยวด้วย AI"
+					}
+				},
+				{
+					"name": "Search - ทาวน์เฮาส์",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/search?q=ทาวน์เฮาส์ใกล้ BTS",
+							"host": ["{{base_url}}"],
+							"path": ["api", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "ทาวน์เฮาส์ใกล้ BTS"
+								}
+							]
+						},
+						"description": "ค้นหาทาวน์เฮาส์ด้วย AI"
+					}
+				},
+				{
+					"name": "Search with Filters",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/search?q=คอนโด&filters={\"price_max\":5000000}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "คอนโด"
+								},
+								{
+									"key": "filters",
+									"value": "{\"price_max\":5000000}"
+								}
+							]
+						},
+						"description": "ค้นหาพร้อม filters"
+					}
+				}
+			]
+		},
+		{
+			"name": "Search History",
+			"item": [
+				{
+					"name": "Get Search History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/search/history?limit=20&page=1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "search", "history"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						},
+						"description": "ดูประวัติการค้นหา"
+					}
+				},
+				{
+					"name": "Get History Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/search/history/:historyId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "search", "history", ":historyId"],
+							"variable": [
+								{
+									"key": "historyId",
+									"value": "REPLACE_WITH_HISTORY_ID"
+								}
+							]
+						},
+						"description": "ดูรายละเอียดประวัติการค้นหา"
+					}
+				},
+				{
+					"name": "Delete History",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/search/history/:historyId",
+							"host": ["{{base_url}}"],
+							"path": ["api", "search", "history", ":historyId"],
+							"variable": [
+								{
+									"key": "historyId",
+									"value": "REPLACE_WITH_HISTORY_ID"
+								}
+							]
+						},
+						"description": "ลบประวัติการค้นหา"
+					}
+				}
+			]
+		},
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Root Endpoint",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						},
+						"description": "ตรวจสอบว่า server ทำงาน"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

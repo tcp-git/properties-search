@@ -1,0 +1,68 @@
+### ไฟล์สำหรับทดสอบ API ทั้งหมด (ใช้กับ VS Code REST Client Extension)
+
+### ตัวแปรสำหรับใช้งาน
+@baseUrl = http://localhost:3000
+@email = testuser@example.com
+@password = testpass123
+
+### 1. ลงทะเบียนผู้ใช้ใหม่
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### 2. เข้าสู่ระบบ (เก็บ token ไว้ใช้)
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### 3. ดึง token จากการ login
+@token = {{login.response.body.token}}
+
+### 4. ดูข้อมูล Profile
+GET {{baseUrl}}/api/auth/profile
+Authorization: Bearer {{token}}
+
+### 5. ค้นหาด้วย AI - ตัวอย่างที่ 1
+GET {{baseUrl}}/api/search?q=หาคอนโดใกล้ BTS ราคาไม่เกิน 3 ล้าน
+Authorization: Bearer {{token}}
+
+### 6. ค้นหาด้วย AI - ตัวอย่างที่ 2
+GET {{baseUrl}}/api/search?q=บ้านเดี่ยว 2 ชั้น มีสระว่ายน้ำ
+Authorization: Bearer {{token}}
+
+### 7. ค้นหาด้วย AI พร้อม filters
+GET {{baseUrl}}/api/search?q=คอนโด&filters={"price_max":5000000}
+Authorization: Bearer {{token}}
+
+### 8. ดูประวัติการค้นหา (หน้าแรก)
+GET {{baseUrl}}/api/search/history?limit=10&page=1
+Authorization: Bearer {{token}}
+
+### 9. ดูประวัติการค้นหา (หน้าที่ 2)
+GET {{baseUrl}}/api/search/history?limit=10&page=2
+Authorization: Bearer {{token}}
+
+### 10. ดูรายละเอียดประวัติการค้นหา (แทนที่ HISTORY_ID ด้วย ID จริง)
+GET {{baseUrl}}/api/search/history/HISTORY_ID
+Authorization: Bearer {{token}}
+
+### 11. ลบประวัติการค้นหา (แทนที่ HISTORY_ID ด้วย ID จริง)
+DELETE {{baseUrl}}/api/search/history/HISTORY_ID
+Authorization: Bearer {{token}}
+
+### 12. ออกจากระบบ
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{token}}
+
+### 13. ทดสอบเข้าถึง API โดยไม่มี token (ควรได้ 401)
+GET {{baseUrl}}/api/search?q=test

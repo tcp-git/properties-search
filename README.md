@@ -326,12 +326,5 @@ curl -X GET "http://localhost:3000/api/search?q=คอนโดใกล้ BTS"
 - 💬 Chatbot Interface
 - 📈 Analytics Dashboard
 
-## 👥 ทีมพัฒนา
-
-**Team 4 - Young Developer Program**
-
----
-
-## 📄 License
-
-MIT
+ 
+ 

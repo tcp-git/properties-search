@@ -147,9 +147,17 @@ pip install -r requirements.txt
 ```
 
 ### 3. ตั้งค่า Environment (.env)
+สร้างไฟล์ `.env` และตั้งค่า API Keys:
 ```env
 MERCIL_API_KEY=your_secret_key_here
+OPENROUTER_API_KEY=your_openrouter_key
+GOOGLE_MAPS_API_KEY=your_google_maps_key
 ```
+
+**คำอธิบาย Environment Variables:**
+- `MERCIL_API_KEY` - API Key สำหรับป้องกัน API (ใช้ร่วมกับ Node.js Backend)
+- `OPENROUTER_API_KEY` - API Key สำหรับเรียกใช้ LLM (Intent Detection & RAG)
+- `GOOGLE_MAPS_API_KEY` - API Key สำหรับดึงข้อมูล POI (ใช้กับ poi_fetcher.py)
 
 ### 4. รัน Service
 ```bash
@@ -206,6 +214,41 @@ curl -X POST http://localhost:8000/api/v1/search ^
 ```
 
 ## โครงสร้างโปรเจค
+
+```
+mercilnew/
+│
+├── 🚀 Service Files (Production)
+│   ├── api_service.py              # FastAPI Service หลัก
+│   └── search_pipeline.py          # AI Search Logic & Ranking
+│
+├── 🔧 Data Preparation (Setup)
+│   ├── poi_fetcher.py              # ดึงข้อมูล POI จาก Google Maps
+│   └── build_vectorstore.py        # สร้าง Vector Database
+│
+├── 📊 Data Files
+│   ├── assets_rows_merged_with_poi.csv          # ข้อมูลหลัก (Properties + POI)
+│   ├── properties_with_scores_and_features.csv  # ข้อมูล + Lifestyle Score
+│   ├── poi_results.csv                          # POI พื้นฐาน
+│   ├── poi_results_enhanced.csv                 # POI เต็ม (30+ types)
+│   ├── poi_cache.json                           # Cache POI พื้นฐาน
+│   └── poi_cache_enhanced.json                  # Cache POI เต็ม
+│
+├── 🗄️ Folders
+│   ├── npa_vectorstore/            # ChromaDB Vector Database
+│   ├── data/                       # ข้อมูลดิบ (Raw CSV)
+│   ├── cache/                      # Cache ชั่วคราว
+│   ├── venv/                       # Python Virtual Environment
+│   └── __pycache__/                # Python Bytecode Cache
+│
+├── ⚙️ Configuration
+│   ├── requirements.txt            # Python Dependencies
+│   ├── .env                        # Environment Variables (ไม่ commit)
+│   └── .gitignore                  # Git Ignore Rules
+│
+└── 📖 Documentation
+    └── README.md                   # คู่มือนี้
+```
 
 ### 📂 ไฟล์หลัก (Core Files)
 
@@ -268,7 +311,17 @@ curl -X POST http://localhost:8000/api/v1/search ^
 ### ⚙️ ไฟล์ Configuration
 
 - **`requirements.txt`** - Python Dependencies
-  - FastAPI, Uvicorn, ChromaDB, Sentence Transformers, Requests, Pandas, etc.
+  ```
+  fastapi==0.104.1
+  uvicorn==0.24.0
+  chromadb==0.4.18
+  sentence-transformers==2.2.2
+  requests==2.31.0
+  pandas==2.1.3
+  python-dotenv==1.0.0
+  googlemaps==4.10.0
+  tqdm==4.66.1
+  ```
 
 - **`.env`** - Environment Variables (ไม่ commit ลง Git)
   ```env
@@ -278,19 +331,128 @@ curl -X POST http://localhost:8000/api/v1/search ^
   ```
 
 - **`.gitignore`** - ไฟล์ที่ไม่ต้อง commit
-  - venv/, __pycache__/, .env, *.pyc, cache/
+  ```
+  venv/
+  __pycache__/
+  .env
+  *.pyc
+  cache/
+  *.log
+  .DS_Store
+  ```
 
 ### 📖 เอกสาร
 
 - **`README.md`** - คู่มือการใช้งาน (ไฟล์นี้)
 
+## 🔧 การสร้าง Vector Database (ครั้งแรก)
+
+หากคุณต้องการสร้าง Vector Database ใหม่จากข้อมูล CSV:
+
+### ขั้นตอนที่ 1: ดึงข้อมูล POI (ถ้ายังไม่มี)
+```bash
+python poi_fetcher.py
+```
+**หมายเหตุ:** ต้องมี `GOOGLE_MAPS_API_KEY` ใน `.env` และใช้เวลานาน (ขึ้นอยู่กับจำนวนทรัพย์สิน)
+
+### ขั้นตอนที่ 2: สร้าง Vector Database
+```bash
+python build_vectorstore.py --csv_path assets_rows_merged_with_poi.csv
+```
+
+**Parameters:**
+- `--csv_path` - ไฟล์ CSV ที่มีข้อมูลทรัพย์สิน + POI (required)
+- `--db_path` - โฟลเดอร์สำหรับเก็บ Vector DB (default: npa_vectorstore)
+- `--model` - Embedding model (default: thenlper/gte-large)
+- `--collection` - ชื่อ Collection (default: npa_assets_v2)
+
+**ตัวอย่าง:**
+```bash
+python build_vectorstore.py ^
+  --csv_path assets_rows_merged_with_poi.csv ^
+  --db_path npa_vectorstore ^
+  --model thenlper/gte-large ^
+  --collection npa_assets_v2
+```
+
+## 🔧 Troubleshooting
+
+### ปัญหาที่พบบ่อย
+
+**1. ChromaDB Collection Not Found**
+```
+Error: Collection 'npa_assets_v2' not found
+```
+**แก้ไข:**
+- สร้าง Vector Database ใหม่: `python build_vectorstore.py --csv_path assets_rows_merged_with_poi.csv`
+- ตรวจสอบว่าโฟลเดอร์ `npa_vectorstore/` มีอยู่
+
+**2. OpenRouter API Error**
+```
+Error: OPENROUTER_API_KEY is not set
+```
+**แก้ไข:**
+- ตั้งค่า `OPENROUTER_API_KEY` ใน `.env`
+- ตรวจสอบว่า API Key ถูกต้องและมี Credit เหลืออยู่
+
+**3. Embedding Model Download Failed**
+```
+Error: Failed to load embedding model
+```
+**แก้ไข:**
+- ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต
+- Model จะถูกดาวน์โหลดอัตโนมัติครั้งแรก (~1.5 GB)
+- ใช้เวลาประมาณ 5-10 นาที (ขึ้นอยู่กับความเร็วอินเทอร์เน็ต)
+
+**4. Google Maps API Quota Exceeded**
+```
+Error: You have exceeded your daily request quota
+```
+**แก้ไข:**
+- ตรวจสอบ Quota ที่ Google Cloud Console
+- ใช้ Cache ที่มีอยู่แล้ว (poi_cache_enhanced.json)
+- รอจนกว่า Quota จะ Reset (เที่ยงคืน Pacific Time)
+
+**5. Port Already in Use**
+```
+Error: Address already in use
+```
+**แก้ไข:**
+- ปิด Process ที่ใช้ Port 8000 อยู่
+- Windows: `netstat -ano | findstr :8000` แล้ว `taskkill /PID <PID> /F`
+- เปลี่ยน Port ใน `api_service.py` (บรรทัดสุดท้าย)
+
+## 📊 ข้อมูลสถิติ
+
+**Vector Database:**
+- จำนวนทรัพย์สิน: ตรวจสอบด้วย `collection.count()`
+- ขนาด Embedding: 1024 มิติ
+- Model: thenlper/gte-large (Multilingual)
+
+**POI Types (30+ ประเภท):**
+- Transportation: 4 types (BTS, MRT, Train, Bus)
+- Shopping: 4 types (Mall, Market, 7-11, Supermarket)
+- Services: 4 types (Hospital, School, Veterinary, University)
+- Lifestyle: 6 types (Restaurant, Cafe, Gym, Spa, Hotel, Community Mall)
+- Tourism: 7 types (Beach, Temple, Museum, Tourist Attraction, Viewpoint, River, Golf)
+
 ## Technology Stack
 
-- **FastAPI** - Web framework
-- **Uvicorn** - ASGI server
-- **ChromaDB** - Vector database
-- **Sentence Transformers** - Embedding model
-- **Python-dotenv** - Environment variables
+- **FastAPI** 0.104.1 - Web framework
+- **Uvicorn** 0.24.0 - ASGI server
+- **ChromaDB** 0.4.18 - Vector database
+- **Sentence Transformers** 2.2.2 - Embedding model (thenlper/gte-large)
+- **Python-dotenv** 1.0.0 - Environment variables
+- **Requests** 2.31.0 - HTTP client
+- **Pandas** 2.1.3 - Data manipulation
+- **Google Maps** 4.10.0 - POI fetching
+
+## 📚 เอกสารเพิ่มเติม
+
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [ChromaDB Documentation](https://docs.trychroma.com/)
+- [Sentence Transformers](https://www.sbert.net/)
+- [OpenRouter API](https://openrouter.ai/docs)
 
 ## License
 

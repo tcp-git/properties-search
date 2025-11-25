@@ -1,8 +1,8 @@
 {
 	"info": {
-		"_postman_id": "team4-backend-api-v2",
-		"name": "Team4 Backend API + AI Search",
-		"description": "API Collection สำหรับ Team4 YDP Backend - Authentication, AI Search และ Search History",
+		"_postman_id": "properties-search-api",
+		"name": "Properties Search API",
+		"description": "API Collection สำหรับระบบค้นหาอสังหาริมทรัพย์ด้วย AI - Authentication, AI Search และ Search History",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
